@@ -1,0 +1,37 @@
+{
+  "inventory": [
+    {
+      "item": {
+        "name": "Item-Green",
+        "imageSrc": "item-1.svg",
+        "count": 4
+      },
+      "position": {
+        "x": 1,
+        "y": 1
+      }
+    },
+    {
+      "item": {
+        "name": "Item-Yellow",
+        "imageSrc": "item-2.svg",
+        "count": 2
+      },
+      "position": {
+        "x": 2,
+        "y": 1
+      }
+    },
+    {
+      "item": {
+        "name": "Item-Purple",
+        "imageSrc": "item-3.svg",
+        "count": 5
+      },
+      "position": {
+        "x": 3,
+        "y": 1
+      }
+    }
+  ]
+}

@@ -1,18 +1,35 @@
 <template>
   <div class="app">
     <div class="app-wrapper">
-      <Inventory />
+      <Inventory :inventoryItems="inventoryItems" />
     </div>
   </div>
 </template>
 
 <script>
 import Inventory from "@/components/Inventory.vue";
+import axios from "axios";
 
 export default {
   name: "App",
   components: {
     Inventory,
+  },
+  data() {
+    return {
+      inventoryItems: [],
+    };
+  },
+  created() {
+    const url = "data/inventory-items.json";
+
+    axios(url)
+      .then((response) => {
+        this.inventoryItems = response.data.inventory;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   },
 };
 </script>

@@ -2,7 +2,12 @@
   <div class="inventory">
     <div class="inventory-info">
       <div class="inventory-info__img">
-        <img src="@/assets/img-blur.png" width="208" height="240" alt="main" />
+        <img
+          src="@/assets/img/img-blur.png"
+          width="208"
+          height="240"
+          alt="main"
+        />
       </div>
       <div
         class="inventory__skeleton inventory__skeleton--2"
@@ -17,30 +22,30 @@
     </div>
     <div class="inventory-grid">
       <div
-        class="inventory-grid__row"
-        v-for="(row, rowIndex) in grid.rows"
-        :key="rowIndex"
+        class="inventory-grid__cell"
+        v-for="ceil in inventory"
+        :key="ceil.id"
+        @dragover.prevent
+        @dragenter.prevent
+        @drop="onDrop($event, ceil)"
       >
         <div
-          class="inventory-grid__cell"
-          v-for="(col, colIndex) in grid.cols"
-          :key="colIndex"
+          class="inventory-grid__content"
+          v-if="ceil.item"
+          draggable="true"
+          @dragstart="onDragStart($event, ceil)"
         >
-          <div
-            class="inventory-grid__content"
-            v-if="itemInCell(colIndex, rowIndex)"
-          >
-            <div class="inventory-grid__img">
-              <img
-                :src="getImage(itemInCell(colIndex, rowIndex).imageSrc)"
-                :alt="itemInCell(colIndex, rowIndex).name"
-                width="54"
-                height="54"
-              />
-            </div>
-            <div class="inventory-grid__count">
-              {{ itemInCell(colIndex, rowIndex).count }}
-            </div>
+          <div class="inventory-grid__img">
+            <img
+              :src="getImage(ceil.item.imageSrc)"
+              :alt="ceil.item.name"
+              draggable="false"
+              width="54"
+              height="54"
+            />
+          </div>
+          <div class="inventory-grid__count">
+            {{ ceil.item.count }}
           </div>
         </div>
       </div>
@@ -48,60 +53,104 @@
     <div class="inventory-footer">
       <div class="inventory__skeleton inventory__skeleton--3"></div>
       <div class="inventory-footer__close">
-        <img src="@/assets/close-icon.svg" width="12" height="12" alt="close" />
+        <img
+          src="@/assets/img/close-icon.svg"
+          width="12"
+          height="12"
+          alt="close"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { uid } from "uid";
+
 export default {
   name: "AppInventory",
+  props: {
+    inventoryItems: {
+      type: Array,
+      default: () => [],
+    },
+  },
   data() {
     return {
       grid: {
         cols: 5,
         rows: 5,
       },
-      inventory: [
-        {
-          name: "Item-Green",
-          imageSrc: "item-1.svg",
-          count: 4,
-          position: {
-            x: 0,
-            y: 0,
-          },
-        },
-        {
-          name: "Item-Yellow",
-          imageSrc: "item-2.svg",
-          count: 2,
-          position: {
-            x: 1,
-            y: 0,
-          },
-        },
-        {
-          name: "Item-Purple",
-          imageSrc: "item-3.svg",
-          count: 5,
-          position: {
-            x: 2,
-            y: 0,
-          },
-        },
-      ],
+      inventory: [],
+      isInventoryLoad: false,
     };
   },
+  created() {
+    // generate grid
+    for (let y = 0; y < this.grid.rows; y++) {
+      for (let x = 0; x < this.grid.cols; x++) {
+        this.inventory.push({
+          id: uid(),
+          position: {
+            x: x + 1,
+            y: y + 1,
+          },
+        });
+      }
+    }
+    this.loadInventory();
+  },
+  watch: {
+    inventoryItems: {
+      handler() {
+        this.loadInventory();
+      },
+      deep: true,
+    },
+  },
   methods: {
+    loadInventory() {
+      if (this.inventoryItems.length > 0) {
+        this.inventoryItems.forEach((itemCeil) => {
+          const index = this.inventory.findIndex((inventoryCeil) => {
+            return (
+              inventoryCeil.position.x === itemCeil.position.x &&
+              inventoryCeil.position.y === itemCeil.position.y
+            );
+          });
+          this.inventory[index].item = itemCeil.item;
+        });
+        this.isInventoryLoad = true;
+      }
+    },
+    onDragStart(e, item) {
+      e.dataTransfer.dropEffect = "move";
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("id", item.id);
+    },
+    onDrop(e, item) {
+      const draggedId = e.dataTransfer.getData("id");
+      const droppedId = item.id;
+
+      const ceilIndexFrom = this.inventory.findIndex(
+        (el) => el.id === draggedId
+      );
+      const ceilIndexTo = this.inventory.findIndex((el) => el.id === droppedId);
+
+      const isCeilFree = !this.inventory[ceilIndexTo].item;
+
+      if (draggedId === droppedId || !isCeilFree) return;
+
+      this.inventory[ceilIndexTo].item = this.inventory[ceilIndexFrom].item;
+      delete this.inventory[ceilIndexFrom].item;
+    },
     itemInCell(col, row) {
-      return this.inventory.find(
+      return this.inventoryItems.find(
         (item) => item.position.x === col && item.position.y === row
       );
     },
     getImage(imgName) {
-      return require("@/assets/" + imgName);
+      return require("@/assets/img/" + imgName);
     },
   },
 };
@@ -160,6 +209,8 @@ export default {
 .inventory-grid {
   border: none;
   border-radius: 0;
+  display: flex;
+  flex-wrap: wrap;
 
   &__row {
     display: flex;
