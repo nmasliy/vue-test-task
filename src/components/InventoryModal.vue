@@ -98,7 +98,7 @@ export default {
     ...mapGetters(["ACTIVE_CEIL", "INVENTORY"]),
   },
   methods: {
-    ...mapMutations(["setItemCount", "setInventoryItem"]),
+    ...mapMutations(["setInventoryItem"]),
     onDeleteClick() {
       this.isDeleteConfirm = true;
     },

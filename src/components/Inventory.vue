@@ -90,23 +90,29 @@ export default {
     };
   },
   created() {
-    // generate inventory grid
-    const ceils = [];
+    const inventory = localStorage.getItem("inventory");
 
-    for (let y = 0; y < this.grid.rows; y++) {
-      for (let x = 0; x < this.grid.cols; x++) {
-        ceils.push({
-          id: uid(),
-          position: {
-            x: x + 1,
-            y: y + 1,
-          },
-        });
+    if (inventory) {
+      this.setInventory(JSON.parse(inventory));
+    } else {
+      // generate inventory grid
+      const ceils = [];
+
+      for (let y = 0; y < this.grid.rows; y++) {
+        for (let x = 0; x < this.grid.cols; x++) {
+          ceils.push({
+            id: uid(),
+            position: {
+              x: x + 1,
+              y: y + 1,
+            },
+          });
+        }
       }
-    }
 
-    this.setInventory(ceils);
-    this.getInventoryData();
+      this.setInventory(ceils);
+      this.getInventoryData();
+    }
   },
   computed: {
     ...mapGetters(["INVENTORY", "ACTIVE_CEIL"]),

@@ -29,10 +29,12 @@ export default createStore({
 
   mutations: {
     setInventory: (state, payload) => {
+      localStorage.setItem("inventory", JSON.stringify(payload));
       state.inventory = payload;
     },
     setInventoryItem: (state, { index, data }) => {
       state.inventory[index] = data;
+      localStorage.setItem("inventory", JSON.stringify(state.inventory));
     },
     setActiveCeil: (state, payload) => {
       state.activeCeil = payload;
