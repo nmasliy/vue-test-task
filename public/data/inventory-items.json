@@ -1,6 +1,7 @@
 {
   "inventory": [
     {
+      "id": "djakld182s",
       "item": {
         "name": "Item-Green",
         "imageSrc": "item-1.svg",
@@ -12,6 +13,7 @@
       }
     },
     {
+      "id": "qwpoeiqoajs09l",
       "item": {
         "name": "Item-Yellow",
         "imageSrc": "item-2.svg",
@@ -23,6 +25,7 @@
       }
     },
     {
+      "id": "asmznbbu17sAs",
       "item": {
         "name": "Item-Purple",
         "imageSrc": "item-3.svg",

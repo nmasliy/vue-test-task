@@ -1,0 +1,79 @@
+@import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap");
+@font-face {
+  font-family: "SFProDisplay";
+  src: local("SFProDisplay"),
+    url("@/fonts/SFProDisplay-Regular.woff2") format("woff2");
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.app {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #1e1e1e;
+  font-family: 'SFProDisplay', sans-serif;
+}
+
+.app-wrapper {
+  max-width: 849px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px;
+  background-color: #1d1d1d;
+  overflow: hidden;
+}
+
+.btn {
+  display: inline-block;
+  text-align: center;
+  padding: 11px 20px;
+  font-family: 'SFProDisplay', sans-serif;
+  font-size: 14px;
+  line-height: 17px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  border-radius: 8px;
+}
+
+.btn--sm {
+  padding: 8px 12px;
+}
+
+.btn--primary {
+  color: #fff;
+  background: #FA7272;
+}
+
+.btn--white {
+  background: #FFFFFF;
+  color: #2D2D2D;
+}
+
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: transform 0.5s ease-in-out;
+}
+
+.slide-left-enter-from,
+.slide-left-leave-to {
+  transform: translateX(120%);
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform 0.5s ease-in-out;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(120%);
+}

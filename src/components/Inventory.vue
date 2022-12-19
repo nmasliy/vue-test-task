@@ -11,7 +11,7 @@
       </div>
       <div
         class="inventory__skeleton inventory__skeleton--2"
-        style="width: 155px; margin-bottom: 24px"
+        style="width: 155px"
       ></div>
       <div class="inventory__skeleton" style="width: 155px"></div>
       <div class="inventory__skeleton" style="width: 190px"></div>
@@ -23,17 +23,18 @@
     <div class="inventory-grid">
       <div
         class="inventory-grid__cell"
-        v-for="ceil in inventory"
+        v-for="ceil in INVENTORY"
         :key="ceil.id"
         @dragover.prevent
         @dragenter.prevent
-        @drop="onDrop($event, ceil)"
+        @drop="onCeilDrop($event, ceil)"
+        @click="onCeilClick($event, ceil)"
       >
         <div
           class="inventory-grid__content"
           v-if="ceil.item"
           draggable="true"
-          @dragstart="onDragStart($event, ceil)"
+          @dragstart="onCeilDragStart($event, ceil)"
         >
           <div class="inventory-grid__img">
             <img
@@ -49,6 +50,11 @@
           </div>
         </div>
       </div>
+      <InventoryModal
+        :isModalOpen="isModalOpen"
+        :getImage="getImage"
+        @onCloseModal="onCloseModal"
+      />
     </div>
     <div class="inventory-footer">
       <div class="inventory__skeleton inventory__skeleton--3"></div>
@@ -66,14 +72,13 @@
 
 <script>
 import { uid } from "uid";
+import InventoryModal from "./InventoryModal.vue";
+import { mapActions, mapGetters, mapMutations } from "vuex";
 
 export default {
   name: "AppInventory",
-  props: {
-    inventoryItems: {
-      type: Array,
-      default: () => [],
-    },
+  components: {
+    InventoryModal,
   },
   data() {
     return {
@@ -81,15 +86,16 @@ export default {
         cols: 5,
         rows: 5,
       },
-      inventory: [],
-      isInventoryLoad: false,
+      isModalOpen: false,
     };
   },
   created() {
-    // generate grid
+    // generate inventory grid
+    const ceils = [];
+
     for (let y = 0; y < this.grid.rows; y++) {
       for (let x = 0; x < this.grid.cols; x++) {
-        this.inventory.push({
+        ceils.push({
           id: uid(),
           position: {
             x: x + 1,
@@ -98,56 +104,66 @@ export default {
         });
       }
     }
-    this.loadInventory();
+
+    this.setInventory(ceils);
+    this.getInventoryData();
   },
-  watch: {
-    inventoryItems: {
-      handler() {
-        this.loadInventory();
-      },
-      deep: true,
-    },
+  computed: {
+    ...mapGetters(["INVENTORY", "ACTIVE_CEIL"]),
   },
   methods: {
-    loadInventory() {
-      if (this.inventoryItems.length > 0) {
-        this.inventoryItems.forEach((itemCeil) => {
-          const index = this.inventory.findIndex((inventoryCeil) => {
-            return (
-              inventoryCeil.position.x === itemCeil.position.x &&
-              inventoryCeil.position.y === itemCeil.position.y
-            );
-          });
-          this.inventory[index].item = itemCeil.item;
-        });
-        this.isInventoryLoad = true;
-      }
-    },
-    onDragStart(e, item) {
+    ...mapMutations(["setActiveCeil", "setInventory", "setInventoryItem"]),
+    ...mapActions(["getInventoryData", "buildInventory"]),
+    onCeilDragStart(e, item) {
       e.dataTransfer.dropEffect = "move";
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("id", item.id);
     },
-    onDrop(e, item) {
+    onCeilDrop(e, item) {
       const draggedId = e.dataTransfer.getData("id");
       const droppedId = item.id;
 
-      const ceilIndexFrom = this.inventory.findIndex(
+      const ceilIndexFrom = this.INVENTORY.findIndex(
         (el) => el.id === draggedId
       );
-      const ceilIndexTo = this.inventory.findIndex((el) => el.id === droppedId);
+      const ceilIndexTo = this.INVENTORY.findIndex((el) => el.id === droppedId);
 
-      const isCeilFree = !this.inventory[ceilIndexTo].item;
+      const isCeilFree = !this.INVENTORY[ceilIndexTo].item;
 
       if (draggedId === droppedId || !isCeilFree) return;
 
-      this.inventory[ceilIndexTo].item = this.inventory[ceilIndexFrom].item;
-      delete this.inventory[ceilIndexFrom].item;
+      const toData = {
+        ...this.INVENTORY[ceilIndexTo],
+        item: this.INVENTORY[ceilIndexFrom].item,
+      };
+
+      this.setInventoryItem({
+        index: ceilIndexTo,
+        data: toData,
+      });
+
+      const fromData = { ...this.INVENTORY[ceilIndexFrom] };
+      delete fromData.item;
+
+      this.setInventoryItem({
+        index: ceilIndexFrom,
+        data: fromData,
+      });
+
+      if (this.INVENTORY[ceilIndexFrom].id == this.ACTIVE_CEIL.id) {
+        this.setActiveCeil(this.INVENTORY[ceilIndexTo]);
+      }
     },
-    itemInCell(col, row) {
-      return this.inventoryItems.find(
-        (item) => item.position.x === col && item.position.y === row
-      );
+    onCeilClick(e, ceil) {
+      if (ceil.item) {
+        this.setActiveCeil(ceil);
+        this.isModalOpen = true;
+      } else {
+        this.isModalOpen = false;
+      }
+    },
+    onCloseModal() {
+      this.isModalOpen = false;
     },
     getImage(imgName) {
       return require("@/assets/img/" + imgName);
@@ -155,136 +171,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss">
-.inventory {
-  display: grid;
-  grid-template-columns: 236px auto;
-  gap: 24px;
-  color: rgba(#fff, 0.4);
-  padding: 32px;
-
-  &__skeleton {
-    margin: 0 auto 16px;
-    background: linear-gradient(
-      90deg,
-      #3c3c3c 0%,
-      #444444 51.04%,
-      #333333 100%
-    );
-    border-radius: 8px;
-    height: 10px;
-
-    &--2 {
-      border-radius: 8px;
-      height: 26px;
-    }
-
-    &--3 {
-      border-radius: 12px;
-      height: 36px;
-      margin: 0;
-    }
-  }
-}
-
-.inventory-info {
-  background: #262626;
-  border: 1px solid #4d4d4d;
-  border-radius: 12px;
-  padding: 18px 14px;
-  &__img {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(6px);
-    border-radius: 8px;
-    margin-bottom: 20px;
-
-    img {
-      display: flex;
-      border-radius: 8px;
-    }
-  }
-}
-
-.inventory-grid {
-  border: none;
-  border-radius: 0;
-  display: flex;
-  flex-wrap: wrap;
-
-  &__row {
-    display: flex;
-
-    &:first-child {
-      .inventory-grid__cell {
-        &:first-child {
-          border-top-left-radius: 12px;
-        }
-        &:last-child {
-          border-top-right-radius: 12px;
-        }
-      }
-    }
-    &:last-child {
-      .inventory-grid__cell {
-        &:first-child {
-          border-bottom-left-radius: 12px;
-        }
-        &:last-child {
-          border-bottom-right-radius: 12px;
-        }
-      }
-    }
-  }
-
-  &__cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 105px;
-    height: 100px;
-    padding: 12px;
-    background: #262626;
-    box-shadow: 0 0 2px #4d4d4d;
-    position: relative;
-
-    img {
-      width: 54px;
-      height: 54px;
-    }
-  }
-
-  &__count {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    font-family: "Inter", sans-serif;
-    font-weight: 500;
-    font-size: 10px;
-    line-height: 12px;
-    padding: 2px 4px;
-    background: #262626;
-    border-top: 1px solid #4d4d4d;
-    border-left: 1px solid #4d4d4d;
-    border-radius: 6px 0px 0px 0px;
-  }
-}
-
-.inventory-footer {
-  position: relative;
-  padding: 18px;
-  grid-column: span 2;
-  padding-right: 68px;
-  background: #262626;
-  border: 1px solid #4d4d4d;
-  border-radius: 12px;
-
-  &__close {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 12px;
-    height: 12px;
-  }
-}
-</style>
